@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Truth or Dare - Create Party</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="game-container">
+    <h1>Truth or Dare</h1>
+    <div id="partySection">
+      <h2>Create or Join a Party</h2>
+      <button id="createPartyBtn">Create Party</button>
+      <input type="text" id="joinPartyId" placeholder="Enter Party ID to Join" />
+      <button id="joinPartyBtn">Join Party</button>
+      <div id="generatedPartyId"></div>
+    </div>
+
+    <div id="partyMembers" style="display: none;">
+      <h3>Current Party Members</h3>
+      <ul id="memberList"></ul>
+    </div>
+
+    <div id="gameSection" style="display: none;">
+      <h3>Current Player: <span id="currentPlayer"></span></h3>
+      <button id="truthBtn">Truth</button>
+      <button id="dareBtn">Dare</button>
+      <button id="refuseBtn">Refuse</button>
+      <button id="doneBtn">Done</button>
+      <div id="result"></div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
