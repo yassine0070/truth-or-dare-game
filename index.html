@@ -1,13 +1,4 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Truth or Dare - Create Party</title>
-  <link rel="stylesheet" href="style.css">
-</head>
-<body>
-  <div class="game-container">
+>
     <h1>Truth or Dare</h1>
     <div id="partySection">
       <h2>Create or Join a Party</h2>
@@ -32,6 +23,175 @@
     </div>
   </div>
 
-  <script src="script.js"></script>
+  <script>
+    // Function to generate a random Party ID
+    function generateRandomPartyId() {
+      return Math.random().toString(36).substring(2, 10); // Generates a random 8-character string
+    }
+
+    const truths = [
+      "What's your biggest fear?", "What's the worst thing you've ever done?", 
+      "What’s the most embarrassing thing that has happened to you?", 
+      "What’s the craziest thing you’ve done for fun?", "Have you ever lied to your best friend?", 
+      "Have you ever cheated on a test?", "Who was your first crush?", 
+      "Have you ever stolen something?", "What is one thing you've never told anyone?"
+    ];
+
+    const dares = [
+      "Dance for 30 seconds!", "Call a friend and sing a song!", "Do 10 push-ups!", 
+      "Send a silly photo to someone you know!", "Text your crush and say you like them.", 
+      "Pretend you’re a robot for 1 minute.", "Talk in an accent for the next 5 minutes."
+    ];
+
+    const punishments = [
+      "Do 30 jumping jacks!", "Talk in a funny accent for 5 minutes!", 
+      "Dance like nobody’s watching for 1 minute!", "Wear socks on your hands for the next 5 minutes!"
+    ];
+
+    let currentParty = null;
+    let currentPartyId = null;
+    let partyMembers = [];
+    let currentTurn = 0;
+    let playerActions = {}; // Track player actions (Truth, Dare, or Refuse)
+    let refuseUsed = {}; // Track if a player has used the "Refuse" option
+    let truthOrDareUsed = {}; // Track if a player has already done Truth or Dare this turn
+
+    // Function to update the party members list on the page
+    function updatePartyMembers() {
+      const memberList = document.getElementById("memberList");
+      memberList.innerHTML = ""; // Clear existing list
+
+      partyMembers.forEach(member => {
+        const li = document.createElement("li");
+        li.textContent = member;
+        memberList.appendChild(li);
+      });
+    }
+
+    // Function to update the current player
+    function updateCurrentPlayer() {
+      const currentPlayerElement = document.getElementById("currentPlayer");
+      currentPlayerElement.textContent = partyMembers[currentTurn];
+    }
+
+    // Disable buttons after player has done Truth/Dare or Refuse
+    function disableButtons() {
+      document.getElementById("truthBtn").disabled = true;
+      document.getElementById("dareBtn").disabled = true;
+      document.getElementById("refuseBtn").disabled = true;
+    }
+
+    // Enable buttons again after moving to the next player
+    function enableButtons() {
+      document.getElementById("truthBtn").disabled = false;
+      document.getElementById("dareBtn").disabled = false;
+      document.getElementById("refuseBtn").disabled = false;
+    }
+
+    // When the "Create Party" button is clicked
+    document.getElementById("createPartyBtn").addEventListener("click", function() {
+      const username = prompt("Enter your username:");
+
+      if (username) {
+        currentPartyId = generateRandomPartyId(); // Generate a random Party ID
+        currentParty = currentPartyId;
+
+        partyMembers = [username]; // Only one player in the game
+
+        localStorage.setItem(currentPartyId, JSON.stringify(partyMembers)); // Save the party members to localStorage
+
+        document.getElementById("generatedPartyId").innerHTML =  
+          Party Created! Your Party ID is: <strong>${currentPartyId}</strong>
+          <br> Share this ID with your friends to join.
+        ;
+
+        document.getElementById("partySection").style.display = "none";
+        document.getElementById("partyMembers").style.display = "block";
+        document.getElementById("gameSection").style.display = "block";
+
+        updatePartyMembers(); 
+        updateCurrentPlayer(); 
+        alert(Party created! Share this Party ID: ${currentPartyId});
+      } else {
+        alert("You must enter a username to create a party.");
+      }
+    });
+
+    // When the "Join Party" button is clicked
+    document.getElementById("joinPartyBtn").addEventListener("click", function() {
+      const partyId = document.getElementById("joinPartyId").value;
+      const username = prompt("Enter your username:");
+
+      if (partyId && username) {
+        const savedPartyMembers = JSON.parse(localStorage.getItem(partyId));
+
+        if (savedPartyMembers) {
+          savedPartyMembers.push(username);
+          localStorage.setItem(partyId, JSON.stringify(savedPartyMembers));
+          partyMembers = savedPartyMembers; 
+
+          currentPartyId = partyId; 
+
+          document.getElementById("generatedPartyId").innerHTML =  
+            You joined Party ID: <strong>${partyId}</strong>
+          ;
+
+          document.getElementById("partySection").style.display = "none";
+          document.getElementById("partyMembers").style.display = "block";
+          document.getElementById("gameSection").style.display = "block";
+
+          updatePartyMembers(); 
+          updateCurrentPlayer(); 
+          alert(Joined Party ${partyId});
+        } else {
+          alert("Invalid Party ID. Please try again.");
+        }
+      } else {
+        alert("You must enter a Party ID and username.");
+      }
+    });
+
+    // When the "Truth" button is clicked
+    document.getElementById("truthBtn").addEventListener("click", function() {
+      if (!truthOrDareUsed[partyMembers[currentTurn]]) {
+        const truthIndex = Math.floor(Math.random() * truths.length);
+        document.getElementById("result").innerHTML = truths[truthIndex];
+        truthOrDareUsed[partyMembers[currentTurn]] = true; // Mark the player as having done Truth/Dare
+      }
+    });
+
+    // When the "Dare" button is clicked
+    document.getElementById("dareBtn").addEventListener("click", function() {
+      if (!truthOrDareUsed[partyMembers[currentTurn]]) {
+        const dareIndex = Math.floor(Math.random() * dares.length);
+        document.getElementById("result").innerHTML = dares[dareIndex];
+        truthOrDareUsed[partyMembers[currentTurn]] = true; // Mark the player as having done Truth/Dare
+      }
+    });
+
+    // When the "Refuse" button is clicked
+    document.getElementById("refuseBtn").addEventListener("click", function() {
+      if (!refuseUsed[partyMembers[currentTurn]]) { // Check if the player has already refused
+        const punishmentIndex = Math.floor(Math.random() * punishments.length);
+        document.getElementById("result").innerHTML = You refused! Punishment: ${punishments[punishmentIndex]};
+        refuseUsed[partyMembers[currentTurn]] = true; // Mark the player as having used "Refuse"
+        disableButtons(); // Disable all buttons after the player uses "Refuse"
+      }
+    });
+
+    // When the "Done" button is clicked (Move to the next player's turn)
+    document.getElementById("doneBtn").addEventListener("click", function() {
+      nextTurn(); // Move to the next player's turn
+    });
+
+    // Move to the next player's turn
+    function nextTurn() {
+      currentTurn = (currentTurn + 1) % partyMembers.length; // Cycle through the members (with only one player, this won't change)
+      truthOrDareUsed[partyMembers[currentTurn]] = false; // Reset Truth/Dare for the next turn
+      refuseUsed[partyMembers[currentTurn]] = false; // Reset Refuse for the next turn
+      updateCurrentPlayer(); 
+      enableButtons(); // Enable buttons for the next turn
+    }
+  </script>
 </body>
 </html>
