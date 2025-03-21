@@ -1,0 +1,131 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Real-Time Truth or Dare</title>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js"></script>
+</head>
+<body>
+  <h1>Real-Time Truth or Dare</h1>
+  <h2>Current Player: <span id="currentPlayer"></span></h2>
+
+  <button id="truthBtn">Truth</button>
+  <button id="dareBtn">Dare</button>
+  <button id="refuseBtn">Refuse</button>
+  <button id="nextBtn">Next Player</button>
+  <p id="result"></p>
+
+  <script>
+    // Firebase Configuration
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+      databaseURL: "https://YOUR_PROJECT_ID.firebaseio.com",
+      projectId: "YOUR_PROJECT_ID",
+      storageBucket: "YOUR_PROJECT_ID.appspot.com",
+      messagingSenderId: "YOUR_SENDER_ID",
+      appId: "YOUR_APP_ID"
+    };
+
+    const app = firebase.initializeApp(firebaseConfig);
+    const database = firebase.database(app);
+
+    // Truth, Dare, and Refuse lists
+    const truths = [
+      "What's your biggest fear?", "What's the worst thing you've ever done?", 
+      "What’s the most embarrassing thing that has happened to you?"
+    ];
+
+    const dares = [
+      "Dance for 30 seconds!", "Call a friend and sing a song!", "Do 10 push-ups!"
+    ];
+
+    const punishments = [
+      "Do 30 jumping jacks!", "Talk in a funny accent for 5 minutes!"
+    ];
+
+    // Firebase reference for the game state
+    let gameRef = firebase.database().ref('game');
+    let currentTurn = 0; // Index of the current player
+    let playerActions = {}; // Track actions for each player
+    let playerNames = ['Player1', 'Player2', 'Player3']; // Example player names
+    let truthOrDareUsed = {}; // Track if a player has done Truth/Dare
+
+    // Update the current player in real-time
+    function updateCurrentPlayer() {
+      const currentPlayer = playerNames[currentTurn];
+      document.getElementById('currentPlayer').innerText = currentPlayer;
+    }
+
+    // Update the game state in Firebase
+    function updateGameState() {
+      gameRef.set({
+        currentTurn: currentTurn,
+        playerActions: playerActions,
+        truthOrDareUsed: truthOrDareUsed
+      });
+    }
+
+    // Listen for real-time updates from Firebase
+    gameRef.on('value', (snapshot) => {
+      const gameData = snapshot.val();
+      if (gameData) {
+        currentTurn = gameData.currentTurn;
+        playerActions = gameData.playerActions || {};
+        truthOrDareUsed = gameData.truthOrDareUsed || {};
+
+        updateCurrentPlayer();
+      }
+    });
+
+    // Truth button click
+    document.getElementById('truthBtn').addEventListener('click', () => {
+      const currentPlayer = playerNames[currentTurn];
+      if (!truthOrDareUsed[currentPlayer]) {
+        const randomTruth = truths[Math.floor(Math.random() * truths.length)];
+        document.getElementById('result').innerText = randomTruth;
+        playerActions[currentPlayer] = 'Truth';
+        truthOrDareUsed[currentPlayer] = true;
+        updateGameState();
+      }
+    });
+
+    // Dare button click
+    document.getElementById('dareBtn').addEventListener('click', () => {
+      const currentPlayer = playerNames[currentTurn];
+      if (!truthOrDareUsed[currentPlayer]) {
+        const randomDare = dares[Math.floor(Math.random() * dares.length)];
+        document.getElementById('result').innerText = randomDare;
+        playerActions[currentPlayer] = 'Dare';
+        truthOrDareUsed[currentPlayer] = true;
+        updateGameState();
+      }
+    });
+
+    // Refuse button click
+    document.getElementById('refuseBtn').addEventListener('click', () => {
+      const currentPlayer = playerNames[currentTurn];
+      if (!truthOrDareUsed[currentPlayer]) {
+        const randomPunishment = punishments[Math.floor(Math.random() * punishments.length)];
+        document.getElementById('result').innerText = `You refused! Punishment: ${randomPunishment}`;
+        playerActions[currentPlayer] = 'Refused';
+        truthOrDareUsed[currentPlayer] = true;
+        updateGameState();
+      }
+    });
+
+    // Next player button click
+    document.getElementById('nextBtn').addEventListener('click', () => {
+      currentTurn = (currentTurn + 1) % playerNames.length; // Move to the next player
+      updateGameState();
+      document.getElementById('result').innerText = ''; // Clear the result
+    });
+
+    // Initial game state
+    updateCurrentPlayer();
+  </script>
+</body>
+</html>
